@@ -1,4 +1,3 @@
-from day_1.input import TEST_DATA
 from input import DATA
 
 
@@ -29,13 +28,12 @@ def part2(string: str):
         if direction == 'L':
             temp = current - num
 
-            total_count += abs((current -1) // 100 - (temp - 1) // 100 )
+            total_count += abs((current - 1) // 100 - (temp - 1) // 100)
 
             current = temp % 100
 
         else:
             current = current + num
-
 
             total_count += current // 100
 
