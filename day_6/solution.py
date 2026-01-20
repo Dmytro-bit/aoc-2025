@@ -71,7 +71,6 @@ def part2(string: str):
                 if num[i] != " ":
                     tmp += num[i]
 
-            print(tmp, column, i)
             new_nums.append(int(tmp))
 
         if operations[column] == "*":
