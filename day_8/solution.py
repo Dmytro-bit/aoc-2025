@@ -1,37 +1,40 @@
 from functools import reduce
 from itertools import combinations
 from operator import mul
-from typing import Self
 
 from day_8.input import TEST_DATA, DATA
 
-CIRCUIT_MAP = {}
-
-
-class Circuit:
-    def __init__(self, *args):
-        self.junctions = set(args)
-
-        for i in self.junctions:
-            CIRCUIT_MAP[i] = self
-
-    def __contains__(self, item):
-        return item in self.junctions
-
-    def __len__(self):
-        return len(self.junctions)
-
-    def __repr__(self):
-        return f"{len(self.junctions)}:  {self.junctions.__str__()}"
-
-    def __or__(self, other: Self):
-        return Circuit(*self.junctions, *other.junctions)
-
-    def add(self, point):
-        self.junctions.add(point)
-
-
 Coord = tuple[int, int, int]
+
+
+class QuickUnionDisjointSet:
+
+    def __init__(self, size: int):
+        self._ids = list(range(size))
+        self.count = size
+        self.sizes = [1] * size
+
+    def find(self, p):
+        while self._ids[p] != p:
+            p = self._ids[p]
+
+        return p
+
+    def union(self, p, q):
+
+        self._rootP = self.find(p)
+        self._rootQ = self.find(q)
+
+        if (self._rootP == self._rootQ):
+            return None
+
+        self._ids[self._rootP] = self._rootQ
+
+        self.sizes[self._rootQ] += self.sizes[self._rootP]
+        self.sizes[self._rootP] = 1
+
+        self.count -= 1
+        return None
 
 
 def parse(string: str) -> list[Coord]:
@@ -51,20 +54,12 @@ def part1(string: str, limit):
 
     pairs.sort(key=lambda pair: distance_sqr(pair[0][1], pair[1][1]))
 
-    circuits = [Circuit(i) for i in junctions]
+    ds = QuickUnionDisjointSet(len(junctions))
 
-    for i in range(1, limit):
+    for i in range(limit):
+        ds.union(pairs[i][0][0], pairs[i][1][0])
 
-        p1 = pairs[i][0]
-        p2 = pairs[i][1]
-
-        if CIRCUIT_MAP[p1] != CIRCUIT_MAP[p2]:
-            circuits.remove(CIRCUIT_MAP[p1])
-            circuits.remove(CIRCUIT_MAP[p2])
-
-            circuits.append(CIRCUIT_MAP[p1] | (CIRCUIT_MAP[p2]))
-
-    return reduce(mul, sorted(map(len, circuits), reverse=True)[:3], 1)
+    return reduce(mul, sorted(ds.sizes, reverse=True)[:3], 1)
 
 
 def part2(string: str):
@@ -74,21 +69,25 @@ def part2(string: str):
 
     pairs.sort(key=lambda pair: distance_sqr(pair[0][1], pair[1][1]))
 
-    circuits = [Circuit(i) for i in junctions]
+    ds = QuickUnionDisjointSet(len(junctions))
 
-    for (p1, p2) in pairs:
-        if CIRCUIT_MAP[p1] != CIRCUIT_MAP[p2]:
-            circuits.remove(CIRCUIT_MAP[p1])
-            circuits.remove(CIRCUIT_MAP[p2])
+    for i in range(len(pairs)):
+        p1 = pairs[i][0]
+        p2 = pairs[i][1]
 
-            circuits.append(CIRCUIT_MAP[p1] | (CIRCUIT_MAP[p2]))
 
-        if len(circuits) == 1:
+        ds.union(p1[0], p2[0])
+
+        if ds.count == 1:
             return p1[1][0] * p2[1][0]
 
     return None
 
 
 if __name__ == "__main__":
-    print(part2(TEST_DATA))
-    print(part2(DATA))
+    print("p1.test", part1(TEST_DATA, 10))
+    print("p1.main", part1( DATA, 1000))
+
+    print("p2.test", part2(TEST_DATA))
+    print("p2.data", part2(DATA))
+
